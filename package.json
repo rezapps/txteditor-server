@@ -4,7 +4,7 @@
   "description": "backend server for TxtEditor",
   "main": "server.ts",
   "scripts": {
-    "dev": "nodemon server.ts"
+    "start": "node server.ts"
   },
   "author": "",
   "license": "ISC",
