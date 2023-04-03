@@ -8,6 +8,10 @@ const docSchema = new Schema({
 		type: String,
 		required: true,
 	},
+	authors: {
+		type: Array(),
+		required: true
+	},
     title: {
         type: String,
         required: true,

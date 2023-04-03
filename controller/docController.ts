@@ -7,7 +7,12 @@ const getDox = async (req: Request, res: Response, next: NextFunction) => {
     // getting docs and sorting them by created time
     const dox = await Doc.find({}).sort({createdAt: -1});
 
-    res.status(200).json(dox);
+	if (dox) {
+		res.status(200).json(dox);
+	} else {
+		res.status(404).json({message: ''})
+	}
+
     next();
 }
 
@@ -27,14 +32,12 @@ const getDoc = async (req: Request, res: Response) => {
 
 // Create new Doc
 const cr8Doc = async (req: Request, res: Response) => {
-    // in server.ts we defined app.use(express.json())
-    // so we have access to all req.body
-    // so we can destructure req.body
-    const {title, text} = req.body;
+
+    const {title, text, authors} = req.body;
 
     // try to add doc to db
     try {
-        const doc = await Doc.create({title, text});
+        const doc = await Doc.create({title, text, authors});
         res.status(200).json(doc);
 
     } catch(error:any) {

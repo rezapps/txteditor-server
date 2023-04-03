@@ -2,48 +2,53 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv'
 import { Server } from 'socket.io'
 import cors from 'cors'
-import passport from 'passport'
-import passportLocal from 'passport-local'
 import cookieParser from 'cookie-parser'
-import bcrypt from 'bcryptjs'
-import session from 'express-session'
 import bodyParser from 'body-parser'
 import mongoose from 'mongoose'
 
 const Doc = require('./models/Docmnt')
-import docRoutes from './routes/route'
+import docRoutes from './routes/docRoute'
+import usrRoutes from './routes/usrRoutes'
 
 dotenv.config()
 
 const app = express()
 const MonUrl = process.env.MONGO_URI || ''
 
+mongoose.connect(MonUrl)
+
+
 const httpServer = require('http').createServer(app)
 const io = new Server(httpServer, {
 	cors: {
 		origin: `${process.env.FRONT_URL}`,
-		methods: ["GET", "POST", "PATCH", "DELETE", "PUT"]
+		methods: ["GET", "POST", "PATCH", "DELETE"]
 	}
 })
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", '*');
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+
+app.use(cors({
+	origin: '*',
+	credentials: true
+}));
+
+
 app.use('/api/docs', docRoutes)
 
-app.use(session({
-	secret: 'some secret',
-	resave: true,
-	saveUninitialized: true
-}))
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
-mongoose.connect(MonUrl)
 
+// -------------------------- Auth  --------------------------
+
+app.use('/user', usrRoutes)
+
+app.use(cookieParser('some-secret'))
+
+
+
+
+// -------------------------- Scoket  --------------------------
 io.on("connection", socket => {
 	socket.on('getDoc', async doc_id => {
 		const currDoc = await findOrCreate(doc_id)
@@ -84,7 +89,7 @@ async function findOrCreate(id: string) {
 
 	if (doc) return doc
 
-	const newDoc = await Doc.create({ _id: id, title: 'untitled', text: '<p>type here...</p>' })
+	const newDoc = await Doc.create({ _id: id, title: 'untitled', text: '<p>type here...</p>', authors: [] })
 	console.log(newDoc)
 
 	return newDoc
